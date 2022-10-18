@@ -18,6 +18,7 @@ resource "aws_internet_gateway" "myVPCigw" {
   }
 }
 
+# Creating Public Subnet in VPC
 resource "aws_subnet" "public_subnet" {
   vpc_id     = aws_vpc.myVPC.id
   cidr_block = "10.0.1.0/24"
@@ -27,6 +28,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
+# Creating Private Subnet in VPC
 resource "aws_subnet" "private_subnet" {
   vpc_id     = aws_vpc.myVPC.id
   cidr_block = "10.0.2.0/24"
@@ -35,6 +37,7 @@ resource "aws_subnet" "private_subnet" {
     Name = "myVPC-private-subnet"
   }
 }
+
 
 resource "aws_route_table" "pubic_rt" {
   vpc_id = aws_vpc.myVPC.id
@@ -73,6 +76,15 @@ resource "aws_route_table_association" "private_rt_association" {
   route_table_id = aws_route_table.private_rt.id
 }
 
+# Creating Elastic IP for NAT Gateway
+resource "aws_eip" "nat_ip" {
+  vpc = true
+   tags = {
+    Name = "myVPC-NAT-eip"
+  }
+}
+
+# Creating NAT Gateway in public subnet
 resource "aws_nat_gateway" "myVPC_nat" {
   allocation_id = aws_eip.nat_ip.id
   subnet_id     = aws_subnet.public_subnet.id
@@ -86,13 +98,9 @@ resource "aws_nat_gateway" "myVPC_nat" {
   depends_on = [aws_internet_gateway.myVPCigw]
 }
 
-resource "aws_eip" "nat_ip" {
-  vpc = true
-   tags = {
-    Name = "myVPC-NAT-eip"
-  }
-}
 
+
+# Getting NAT Gateway IP
 output "nat_gateway_ip" {
   value = aws_eip.nat_ip.public_ip
 }
